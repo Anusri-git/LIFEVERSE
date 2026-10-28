@@ -1,0 +1,461 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LifeVerse</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: a calm civic site whose hero and demo are both a live "request board": tickets move from Open to Responded to Closed. */
+:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --ink:#0F2233; --muted:#51657A; --line:#D5DDE5;
+  --urgent:#C9262D; --urgent-soft:#FBE7E8; --on-urgent:#FFFFFF;
+  --help:#0B7A6C; --help-soft:#DDF1EE; --on-help:#FFFFFF;
+  --warn:#8A5600; --warn-soft:#FFF0D2;
+  --band:#0F2233; --on-band:#EAF0F5; --band-muted:#A9BBCB;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Figtree','Segoe UI',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1722; --surface:#12232F; --ink:#E8EEF3; --muted:#9DB0C0; --line:#25394A;
+  --urgent:#FF7075; --urgent-soft:#3A1E23; --on-urgent:#1B0A0C;
+  --help:#4FD1BC; --help-soft:#10342F; --on-help:#06201C;
+  --warn:#FFC766; --warn-soft:#3A2D10;
+  --band:#060F17; --on-band:#EAF0F5; --band-muted:#8FA3B5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1722; --surface:#12232F; --ink:#E8EEF3; --muted:#9DB0C0; --line:#25394A;
+  --urgent:#FF7075; --urgent-soft:#3A1E23; --on-urgent:#1B0A0C;
+  --help:#4FD1BC; --help-soft:#10342F; --on-help:#06201C;
+  --warn:#FFC766; --warn-soft:#3A2D10;
+  --band:#060F17; --on-band:#EAF0F5; --band-muted:#8FA3B5; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--font-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-display);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-0.02em}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--urgent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font:500 13px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* header */
+header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:20px}
+.brand{font:800 26px/1 var(--font-display);letter-spacing:-0.03em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand i{width:14px;height:14px;border-radius:50%;background:var(--urgent);box-shadow:10px 5px 0 -1px var(--help);margin-right:10px}
+nav.top{display:flex;gap:6px 22px;flex-wrap:wrap;font-weight:500;font-size:15px}
+nav.top a{text-decoration:none;color:var(--muted);padding:6px 0}
+nav.top a:hover{color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding-block:48px 72px}
+.hero h1{font-size:clamp(2.7rem,7.2vw,5.4rem);font-weight:800}
+.hero h1 em{font-style:normal;color:var(--urgent)}
+.hero .lede{font-size:clamp(1.1rem,2vw,1.3rem);color:var(--muted);max-width:34em;margin-top:22px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+.btn{font:600 16px/1 var(--font-body);border:0;border-radius:10px;padding:15px 22px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;min-height:48px}
+.btn.primary{background:var(--urgent);color:var(--on-urgent)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn.help{background:var(--help);color:var(--on-help)}
+.btn.small{padding:10px 14px;min-height:40px;font-size:15px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn:hover:not([disabled]){filter:brightness(1.07)}
+
+.board{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ticket{background:var(--surface);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 0 var(--line),0 14px 30px -18px rgba(15,34,51,.35);display:flex;flex-direction:column;gap:8px}
+.ticket:nth-child(2){margin-left:28px}
+.ticket:nth-child(3){margin-left:56px}
+.ticket .row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.ticket .id{font:500 13px var(--font-mono);color:var(--muted)}
+.ticket .t{font-weight:600}
+.ticket .m{font-size:15px;color:var(--muted)}
+.board-note{font-size:14px;color:var(--muted);margin-left:56px}
+
+.chip{font:500 12.5px/1 var(--font-mono);padding:6px 9px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.chip.open{background:var(--urgent-soft);color:var(--urgent)}
+.chip.responded{background:var(--warn-soft);color:var(--warn)}
+.chip.closed{background:var(--help-soft);color:var(--help)}
+.chip.neutral{background:var(--bg);color:var(--muted)}
+
+/* sections */
+section{padding-block:72px}
+section h2{font-size:clamp(2rem,4.6vw,3.2rem);font-weight:700}
+.sec-head{display:flex;flex-direction:column;gap:14px;margin-bottom:36px;max-width:40em}
+.sec-head p{color:var(--muted);font-size:18px}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;counter-reset:s}
+.steps li{counter-increment:s;padding:24px 24px 0 0;border-top:3px solid var(--line);position:relative;min-width:0}
+.steps li::before{content:counter(s);position:absolute;top:-17px;left:0;width:31px;height:31px;border-radius:50%;background:var(--ink);color:var(--bg);font:600 15px/31px var(--font-mono);text-align:center}
+.steps li:nth-child(1){border-top-color:var(--urgent)}
+.steps li:nth-child(2){border-top-color:var(--warn)}
+.steps li:nth-child(3){border-top-color:var(--help)}
+.steps h3{font-size:22px;margin:12px 0 8px}
+.steps p{color:var(--muted);font-size:16px}
+
+.roles{display:grid;grid-template-columns:repeat(2,1fr);gap:0 56px}
+.role{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:22px 0;border-top:1px solid var(--line)}
+.role h3{font-size:22px}
+.role p{color:var(--muted);font-size:16px}
+.role .can{color:var(--ink);margin-top:6px;font-size:15px}
+
+/* demo */
+#demo{background:var(--band);color:var(--on-band);max-width:1120px;margin:0 auto;border-radius:28px;padding:clamp(28px,5vw,56px) clamp(14px,4vw,48px)}
+#demo .sec-head p{color:var(--band-muted)}
+.app{background:var(--surface);color:var(--ink);border-radius:20px;overflow:hidden}
+.app-bar{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:600 15px/1 var(--font-body);background:transparent;color:var(--muted);border:1.5px solid var(--line);border-radius:999px;padding:11px 16px;cursor:pointer;min-height:44px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.who{font-size:14px;color:var(--muted)}
+.who b{color:var(--ink)}
+.app-body{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:0}
+.pane{padding:22px;min-width:0}
+.pane + .pane{border-left:1px solid var(--line);background:var(--bg)}
+.pane h3{font-size:22px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font:700 28px/1 var(--font-display)}
+.stat span{font-size:13px;color:var(--muted)}
+form.req{display:grid;gap:12px;margin-bottom:26px;padding:16px;border-radius:12px;background:var(--bg)}
+label{font-size:14px;font-weight:600;display:grid;gap:6px}
+select,textarea,input[type=text]{font:400 16px var(--font-body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+textarea{min-height:84px;resize:vertical}
+.cats{display:flex;gap:8px;flex-wrap:wrap}
+.cats label{display:inline-flex;font-weight:500}
+.cats input{position:absolute;opacity:0;pointer-events:none}
+.cats span{border:1.5px solid var(--line);border-radius:999px;padding:9px 14px;cursor:pointer;background:var(--surface);font-size:15px}
+.cats input:checked + span{background:var(--urgent);border-color:var(--urgent);color:var(--on-urgent)}
+.cats input:focus-visible + span{outline:3px solid var(--ink);outline-offset:2px}
+.list{display:grid;gap:12px}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px;min-width:0}
+.card .row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.card .id{font:500 13px var(--font-mono);color:var(--muted)}
+.card .txt{overflow-wrap:anywhere}
+.card .meta{font-size:14px;color:var(--muted)}
+.resp{font-size:14px;border-left:3px solid var(--help);padding-left:10px;color:var(--ink)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.empty{border:1.5px dashed var(--line);border-radius:12px;padding:22px;color:var(--muted);text-align:center;font-size:15px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filters button{font:500 14px var(--font-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:8px 12px;cursor:pointer;min-height:38px}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.notes{display:grid;gap:10px}
+.note{font-size:15px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px}
+.note.unread{border-color:var(--urgent)}
+.note time{font-size:12.5px;color:var(--muted);font-family:var(--font-mono)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font:500 12.5px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+.demo-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:14px;color:var(--band-muted);align-items:center}
+.demo-foot button{background:transparent;color:var(--on-band);border:1.5px solid var(--band-muted);border-radius:8px;padding:9px 14px;font:500 14px var(--font-body);cursor:pointer;min-height:40px}
+.sub{font:500 13px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+
+/* architecture */
+.stack{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1.5px solid var(--ink);border-radius:var(--radius);overflow:hidden}
+.layer{padding:20px;min-width:0;border-right:1.5px solid var(--ink);display:grid;gap:6px;align-content:start}
+.layer:last-child{border-right:0}
+.layer h3{font:600 17px var(--font-mono);letter-spacing:0}
+.layer p{font-size:15px;color:var(--muted)}
+.path{margin-top:18px;font:400 15px/1.7 var(--font-mono);color:var(--muted);overflow-wrap:anywhere}
+.path b{color:var(--ink);font-weight:500}
+.fine{margin-top:22px;max-width:44em;color:var(--muted);font-size:16px}
+
+footer{padding-block:40px 56px;color:var(--muted);font-size:15px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line)}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:36px;padding-block:28px 56px}
+  .steps{grid-template-columns:1fr 1fr;row-gap:40px;column-gap:20px}
+  .roles{grid-template-columns:1fr}
+  .app-body{grid-template-columns:1fr}
+  .pane + .pane{border-left:0;border-top:1px solid var(--line)}
+  .stack{grid-template-columns:1fr 1fr}
+  .layer:nth-child(2){border-right:0}
+  .layer:nth-child(-n+2){border-bottom:1.5px solid var(--ink)}
+  .layer:nth-child(3){border-right:1.5px solid var(--ink)}
+}
+@media (max-width:520px){
+  body{font-size:16px}
+  section{padding-block:52px}
+  .steps{grid-template-columns:1fr}
+  .role{grid-template-columns:1fr;gap:6px}
+  .ticket:nth-child(2){margin-left:14px}.ticket:nth-child(3){margin-left:28px}.board-note{margin-left:28px}
+  .stack{grid-template-columns:1fr}
+  .layer{border-right:0!important;border-bottom:1.5px solid var(--ink)}
+  .layer:last-child{border-bottom:0}
+  .pane{padding:16px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .ticket{animation:rise .6s both}.ticket:nth-child(2){animation-delay:.12s}.ticket:nth-child(3){animation-delay:.24s}
+  @keyframes rise{from{transform:translateY(10px);opacity:.01}to{transform:none;opacity:1}}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top"><i aria-hidden="true"></i>LifeVerse</a>
+    <nav class="top" aria-label="Sections">
+      <a href="#how">How it works</a><a href="#roles">Who it is for</a><a href="#demo">Live demo</a><a href="#build">How it is built</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">Blood · Food · Community help</p>
+        <h1 style="margin-top:18px">Ask once.<br><em>Someone answers.</em></h1>
+        <p class="lede">LifeVerse connects people who need urgent help with donors and volunteers who can give it. Raise a request, watch it get answered, close it when help arrives.</p>
+        <div class="cta">
+          <a class="btn primary" href="#demo">Try the live demo</a>
+          <a class="btn ghost" href="#how">See how it works</a>
+        </div>
+      </div>
+      <div class="board" aria-label="Example requests">
+        <div class="ticket">
+          <div class="row"><span class="id">REQ-1042</span><span class="chip open">Open</span></div>
+          <p class="t">O-negative blood needed for surgery tomorrow morning</p>
+          <p class="m">Blood request · 2 donors notified</p>
+        </div>
+        <div class="ticket">
+          <div class="row"><span class="id">REQ-1041</span><span class="chip responded">Responded</span></div>
+          <p class="t">Groceries for an elderly neighbour this week</p>
+          <p class="m">Food request · Ravi offered to help</p>
+        </div>
+        <div class="ticket">
+          <div class="row"><span class="id">REQ-1040</span><span class="chip closed">Closed</span></div>
+          <p class="t">Lift to the clinic for dialysis</p>
+          <p class="m">Community help · Meera accepted the task</p>
+        </div>
+        <p class="board-note">Example requests. Try your own in the demo below.</p>
+      </div>
+    </div>
+
+    <section id="how">
+      <div class="sec-head">
+        <p class="eyebrow">How it works</p>
+        <h2>Four steps from request to closed</h2>
+        <p>Every request moves through the same path, and everyone involved can see where it stands.</p>
+      </div>
+      <ol class="steps">
+        <li><h3>Raise</h3><p>A Help Seeker picks a category and describes what is needed. The request is saved.</p></li>
+        <li><h3>Notify</h3><p>Donors and volunteers are told right away that a new request is open.</p></li>
+        <li><h3>Respond</h3><p>A donor offers a donation or a volunteer accepts the task. The status changes and the seeker is notified.</p></li>
+        <li><h3>Close</h3><p>Once help is given, the seeker closes the request. If nobody responds, it stays open.</p></li>
+      </ol>
+    </section>
+
+    <section id="roles">
+      <div class="sec-head">
+        <p class="eyebrow">Who it is for</p>
+        <h2>Four roles, one platform</h2>
+      </div>
+      <div class="roles">
+        <div class="role"><h3>Help Seeker</h3><div><p>Someone who needs blood, food or a hand.</p><p class="can">Raises requests, tracks status, closes them.</p></div></div>
+        <div class="role"><h3>Donor</h3><div><p>Someone who can give blood, food or other support.</p><p class="can">Sees open requests, offers a donation.</p></div></div>
+        <div class="role"><h3>Volunteer</h3><div><p>Someone who can give time and effort.</p><p class="can">Accepts tasks, coordinates help.</p></div></div>
+        <div class="role"><h3>Administrator</h3><div><p>The person who keeps the platform healthy.</p><p class="can">Manages users and requests, reads activity reports.</p></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<section id="demo" aria-labelledby="demo-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow" style="color:var(--band-muted)">Live demo</p>
+      <h2 id="demo-h">Be each user for a minute</h2>
+      <p>Pick a role, raise a request as a Help Seeker, then switch to Donor or Volunteer to answer it. Switch back to see the notification and close it.</p>
+    </div>
+    <div class="app" id="app-root">
+      <div class="app-bar">
+        <div class="tabs" role="tablist" aria-label="Demo sign-in role" id="tabs"></div>
+        <p class="who" id="who"></p>
+      </div>
+      <div class="app-body">
+        <div class="pane" id="main" role="tabpanel" aria-live="polite"></div>
+        <div class="pane" id="side"></div>
+      </div>
+    </div>
+    <div class="demo-foot">
+      <span>The demo runs in your browser and keeps its data on this device only. The full system stores everything in MySQL.</span>
+      <button type="button" id="reset">Reset demo data</button>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <section id="build">
+    <div class="sec-head">
+      <p class="eyebrow">How it is built</p>
+      <h2>Four layers, one request path</h2>
+      <p>The structure follows the project's sequence diagram, so every screen action maps to a call you can trace.</p>
+    </div>
+    <div class="stack">
+      <div class="layer"><h3>Web UI</h3><p>Forms, request lists and dashboards in the browser.</p></div>
+      <div class="layer"><h3>RequestController</h3><p>Receives each HTTP call and passes it on.</p></div>
+      <div class="layer"><h3>RequestService</h3><p>Applies the rules, updates status, raises notifications.</p></div>
+      <div class="layer"><h3>MySQL</h3><p>Users, requests, responses and notifications.</p></div>
+    </div>
+    <p class="path"><b>Raise a request</b> &nbsp;POST /requests → createRequest(data) → save request → confirmation<br>
+      <b>Answer a request</b> &nbsp;GET /requests → getRequests() → fetch → list · POST /responses → addResponse() → save + update status → notification</p>
+    <p class="fine">Planned next: location-based matching, SMS and email alerts, and verification of donors and volunteers.</p>
+  </section>
+  <footer><span>LifeVerse · A software engineering project</span><span>Emergency? Call your local emergency number first.</span></footer>
+</div>
+
+<script>
+(function(){
+  var KEY='lifeverse-demo-v1', mem=null, state=null, pendingRm=null, filter='all';
+  var ROLES=[
+    {id:'seeker',label:'Help Seeker',name:'You'},
+    {id:'donor',label:'Donor',name:'Ravi'},
+    {id:'volunteer',label:'Volunteer',name:'Meera'},
+    {id:'admin',label:'Administrator',name:'Admin'}
+  ];
+  var CATS=[{id:'emergency',label:'Emergency'},{id:'blood',label:'Blood'},{id:'food',label:'Food'},{id:'community',label:'Community help'}];
+  function catLabel(id){for(var i=0;i<CATS.length;i++)if(CATS[i].id===id)return CATS[i].label;return id}
+  function now(){return Date.now()}
+  function seed(){
+    var m=60000;
+    return {role:'seeker',next:1043,
+      users:{'You':{role:'seeker',active:true},'Kavya S.':{role:'seeker',active:true},'Imran A.':{role:'seeker',active:true},'Lakshmi N.':{role:'seeker',active:true},'Ravi':{role:'donor',active:true},'Meera':{role:'volunteer',active:true}},
+      requests:[
+        {id:1042,cat:'food',text:'Groceries for my elderly neighbour this week. She cannot go out.',by:'Imran A.',status:'open',at:now()-35*m,responses:[]},
+        {id:1041,cat:'blood',text:'B-positive blood needed for a family member in surgery tomorrow morning.',by:'You',status:'responded',at:now()-3*60*m,responses:[{by:'Ravi',role:'donor',msg:'Offered a donation',at:now()-2*60*m}]},
+        {id:1040,cat:'community',text:'Need a lift to the clinic for a dialysis appointment on Thursday.',by:'Lakshmi N.',status:'open',at:now()-26*60*m,responses:[]},
+        {id:1039,cat:'food',text:'Dry rations for a family of four after a house fire.',by:'Kavya S.',status:'closed',at:now()-3*24*60*m,responses:[{by:'Meera',role:'volunteer',msg:'Accepted the task',at:now()-3*24*60*m+20*m}]}
+      ],
+      notes:[
+        {id:1,to:['seeker'],text:'Ravi offered a donation for REQ-1041.',at:now()-2*60*m,read:false},
+        {id:2,to:['donor','volunteer'],text:'New food request REQ-1042 is open.',at:now()-35*m,read:false},
+        {id:3,to:['donor','volunteer'],text:'New community request REQ-1040 is open.',at:now()-26*60*m,read:true}
+      ],nid:4};
+  }
+  function load(){
+    try{var s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){}
+    return mem?JSON.parse(JSON.stringify(mem)):seed();
+  }
+  function save(){mem=JSON.parse(JSON.stringify(state));try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function ago(t){var d=Math.round((now()-t)/60000);if(d<1)return 'just now';if(d<60)return d+' min ago';var h=Math.round(d/60);if(h<24)return h+' h ago';var dd=Math.round(h/24);return dd===1?'yesterday':dd+' days ago'}
+  function chip(s){var l={open:'Open',responded:'Responded',closed:'Closed'}[s];return '<span class="chip '+s+'">'+l+'</span>'}
+  function me(){for(var i=0;i<ROLES.length;i++)if(ROLES[i].id===state.role)return ROLES[i]}
+  function notify(to,text){state.notes.unshift({id:state.nid++,to:to,text:text,at:now(),read:false})}
+  function myNotes(){return state.notes.filter(function(n){return n.to.indexOf(state.role)>-1})}
+
+  function renderTabs(){
+    var h='';ROLES.forEach(function(r){
+      h+='<button class="tab" role="tab" type="button" data-act="role" data-id="'+r.id+'" aria-selected="'+(r.id===state.role)+'">'+r.label+'</button>'});
+    document.getElementById('tabs').innerHTML=h;
+    var r=me();document.getElementById('who').innerHTML='Signed in as <b>'+esc(r.name)+'</b> · '+r.label;
+  }
+  function stats(list){
+    var c={open:0,responded:0,closed:0};list.forEach(function(r){c[r.status]++});
+    return '<div class="stats"><div class="stat"><b>'+c.open+'</b><span>Open</span></div><div class="stat"><b>'+c.responded+'</b><span>Responded</span></div><div class="stat"><b>'+c.closed+'</b><span>Closed</span></div></div>';
+  }
+  function reqCard(r,mode){
+    var h='<article class="card"><div class="row"><span class="id">REQ-'+r.id+' · '+esc(catLabel(r.cat))+'</span>'+chip(r.status)+'</div>';
+    h+='<p class="txt">'+esc(r.text)+'</p><p class="meta">'+(mode==='seeker'?'Raised ':'By '+esc(r.by)+' · ')+ago(r.at)+'</p>';
+    r.responses.forEach(function(x){h+='<p class="resp"><b>'+esc(x.by)+'</b> ('+(x.role==='donor'?'Donor':'Volunteer')+'): '+esc(x.msg)+' · '+ago(x.at)+'</p>'});
+    var acts='';
+    if(mode==='seeker'&&r.status==='responded')acts+='<button class="btn help small" type="button" data-act="close" data-id="'+r.id+'">Mark as closed</button>';
+    if(mode==='seeker'&&r.status==='open')acts+='<span class="meta">Waiting for a donor or volunteer.</span>';
+    if(mode==='helper'&&r.status!=='closed'){
+      var u=state.users[me().name], did=r.responses.some(function(x){return x.by===me().name});
+      var label=state.role==='donor'?'Offer a donation':'Accept this task';
+      if(!u.active)acts+='<span class="meta">Your account is suspended by the administrator.</span>';
+      else if(did)acts+='<span class="meta">You responded.</span>';
+      else acts+='<button class="btn primary small" type="button" data-act="respond" data-id="'+r.id+'">'+label+'</button>';
+    }
+    if(acts)h+='<div class="acts">'+acts+'</div>';
+    return h+'</article>';
+  }
+  function renderSeeker(){
+    var mine=state.requests.filter(function(r){return r.by==='You'});
+    var u=state.users['You'];
+    var h=stats(mine)+'<h3>Raise a request</h3>';
+    if(!u.active)h+='<p class="empty" style="margin-bottom:22px">Your account is suspended by the administrator, so new requests are paused.</p>';
+    else{
+      h+='<form class="req" id="reqform" autocomplete="off"><div><p class="eyebrow" style="margin-bottom:8px">Category</p><div class="cats" role="radiogroup" aria-label="Category">';
+      CATS.forEach(function(c,i){h+='<label><input type="radio" name="cat" value="'+c.id+'"'+(i===0?' checked':'')+'><span>'+c.label+'</span></label>'});
+      h+='</div></div><label for="f-text">What do you need?<textarea id="f-text" name="text" required placeholder="For example: A+ blood for surgery on Friday at City Hospital"></textarea></label>';
+      h+='<div><button class="btn primary" type="submit">Submit request</button></div><p class="meta" id="f-err" style="color:var(--urgent);font-size:14px" role="alert"></p></form>';
+    }
+    h+='<h3>My requests</h3><div class="list">';
+    if(!mine.length)h+='<p class="empty">You have not raised a request yet. Use the form above.</p>';
+    mine.slice().sort(function(a,b){return b.at-a.at}).forEach(function(r){h+=reqCard(r,'seeker')});
+    return h+'</div>';
+  }
+  function renderHelper(){
+    var list=state.requests.filter(function(r){var u=state.users[r.by];return u&&u.active});
+    var shown=list.filter(function(r){return filter==='all'||r.cat===filter});
+    var h=stats(list)+'<h3>Requests waiting for help</h3><div class="filters" role="group" aria-label="Filter by category"><button type="button" data-act="filter" data-id="all" aria-pressed="'+(filter==='all')+'">All</button>';
+    CATS.forEach(function(c){h+='<button type="button" data-act="filter" data-id="'+c.id+'" aria-pressed="'+(filter===c.id)+'">'+c.label+'</button>'});
+    h+='</div><div class="list">';
+    if(!shown.length)h+='<p class="empty">No requests in this category right now.</p>';
+    shown.sort(function(a,b){var o={open:0,responded:1,closed:2};return o[a.status]-o[b.status]||b.at-a.at}).forEach(function(r){h+=reqCard(r,'helper')});
+    return h+'</div>';
+  }
+  function renderAdmin(){
+    var c={open:0,responded:0,closed:0},resp=0;state.requests.forEach(function(r){c[r.status]++;resp+=r.responses.length});
+    var h='<h3>Activity report</h3>'+stats(state.requests)+'<p class="meta" style="margin:-8px 0 22px">'+state.requests.length+' requests in total, '+resp+' responses, '+Object.keys(state.users).length+' users.</p>';
+    h+='<h3>Requests</h3><div class="tablewrap"><table><thead><tr><th>ID</th><th>Category</th><th>Raised by</th><th>Status</th><th>Replies</th><th><span style="position:absolute;left:-9999px">Action</span></th></tr></thead><tbody>';
+    state.requests.slice().sort(function(a,b){return b.id-a.id}).forEach(function(r){
+      var btn=pendingRm===r.id?'<button class="btn primary small" type="button" data-act="rm-yes" data-id="'+r.id+'">Confirm remove</button> <button class="btn ghost small" type="button" data-act="rm-no">Cancel</button>':'<button class="btn ghost small" type="button" data-act="rm" data-id="'+r.id+'">Remove</button>';
+      h+='<tr><td class="mono">REQ-'+r.id+'</td><td>'+esc(catLabel(r.cat))+'</td><td>'+esc(r.by)+'</td><td>'+chip(r.status)+'</td><td>'+r.responses.length+'</td><td>'+btn+'</td></tr>'});
+    h+='</tbody></table></div><h3 style="margin-top:26px">Users</h3><div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th>Account</th><th><span style="position:absolute;left:-9999px">Action</span></th></tr></thead><tbody>';
+    Object.keys(state.users).forEach(function(n){var u=state.users[n];
+      h+='<tr><td>'+esc(n)+'</td><td>'+({seeker:'Help Seeker',donor:'Donor',volunteer:'Volunteer'}[u.role])+'</td><td>'+(u.active?'<span class="chip closed">Active</span>':'<span class="chip open">Suspended</span>')+'</td><td><button class="btn ghost small" type="button" data-act="toggleUser" data-id="'+esc(n)+'">'+(u.active?'Suspend':'Reactivate')+'</button></td></tr>'});
+    return h+'</tbody></table></div>';
+  }
+  function renderSide(){
+    if(state.role==='admin')return '<h3>Admin tools</h3><p class="meta" style="font-size:15px;color:var(--muted)">Remove a request or suspend a user. A suspended Help Seeker’s requests disappear from the donor and volunteer lists, and a suspended donor or volunteer cannot respond.</p>';
+    var n=myNotes(),unread=n.filter(function(x){return !x.read}).length;
+    var h='<h3>Notifications'+(unread?' <span class="chip open" style="vertical-align:middle">'+unread+' new</span>':'')+'</h3><div class="notes">';
+    if(!n.length)h+='<p class="empty">Nothing yet. Updates about your requests appear here.</p>';
+    n.slice(0,8).forEach(function(x){h+='<div class="note'+(x.read?'':' unread')+'"><span>'+esc(x.text)+'</span><time>'+ago(x.at)+'</time></div>'});
+    h+='</div>';
+    if(unread)h+='<p style="margin-top:14px"><button class="btn ghost small" type="button" data-act="read">Mark all as read</button></p>';
+    return h;
+  }
+  function render(){
+    renderTabs();
+    document.getElementById('main').innerHTML=state.role==='seeker'?renderSeeker():state.role==='admin'?renderAdmin():renderHelper();
+    document.getElementById('side').innerHTML=renderSide();
+  }
+  function byId(id){for(var i=0;i<state.requests.length;i++)if(state.requests[i].id===id)return state.requests[i]}
+
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b||!document.getElementById('app-root').contains(b))return;
+    var a=b.getAttribute('data-act'),id=b.getAttribute('data-id');
+    if(a==='role'){state.role=id;pendingRm=null}
+    else if(a==='filter'){filter=id}
+    else if(a==='read'){state.notes.forEach(function(n){if(n.to.indexOf(state.role)>-1)n.read=true})}
+    else if(a==='respond'){var r=byId(+id),m=me();if(r&&r.status!=='closed'){
+      r.responses.push({by:m.name,role:state.role,msg:state.role==='donor'?'Offered a donation':'Accepted the task',at:now()});
+      if(r.status==='open')r.status='responded';
+      notify([state.users[r.by].role],m.name+(state.role==='donor'?' offered a donation for':' accepted the task for')+' REQ-'+r.id+'.');}}
+    else if(a==='close'){var q=byId(+id);if(q){q.status='closed';notify(['donor','volunteer'],'REQ-'+q.id+' was closed. Thank you for helping.')}}
+    else if(a==='rm'){pendingRm=+id}
+    else if(a==='rm-no'){pendingRm=null}
+    else if(a==='rm-yes'){state.requests=state.requests.filter(function(r){return r.id!==+id});pendingRm=null}
+    else if(a==='toggleUser'){var u=state.users[id];if(u)u.active=!u.active}
+    save();render();
+  });
+  document.addEventListener('submit',function(e){
+    if(e.target.id!=='reqform')return;e.preventDefault();
+    var f=e.target,text=f.elements.text.value.trim(),cat=f.elements.cat.value;
+    if(text.length<8){document.getElementById('f-err').textContent='Add a few more details so helpers know what you need.';f.elements.text.focus();return}
+    var id=state.next++;
+    state.requests.unshift({id:id,cat:cat,text:text,by:'You',status:'open',at:now(),responses:[]});
+    notify(['donor','volunteer'],'New '+catLabel(cat).toLowerCase()+' request REQ-'+id+' is open.');
+    save();render();
+  });
+  document.getElementById('reset').addEventListener('click',function(){state=seed();pendingRm=null;filter='all';save();render()});
+  state=load();render();
+})();
+</script>
+
+</body></html>
